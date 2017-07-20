@@ -41,35 +41,8 @@ init(State) ->
 do(State) ->
     try
         case rebar_packages:registry_dir(State) of
-            {ok, RegistryDir} ->
-                filelib:ensure_dir(filename:join(RegistryDir, "dummy")),
-                HexFile = filename:join(RegistryDir, "registry"),
-                ?INFO("Updating package registry...", []),
-                TmpDir = ec_file:insecure_mkdtemp(),
-                TmpFile = filename:join(TmpDir, "packages.gz"),
-
-                CDN = rebar_state:get(State, rebar_packages_cdn, ?DEFAULT_CDN),
-                case rebar_utils:url_append_path(CDN, ?REMOTE_REGISTRY_FILE) of
-                    {ok, Url} ->
-                        ?DEBUG("Fetching registry from ~p", [Url]),
-                        case httpc:request(get, {Url, [{"User-Agent", rebar_utils:user_agent()}]},
-                                           [], [{stream, TmpFile}, {sync, true}],
-                                           rebar) of
-                            {ok, saved_to_file} ->
-                                {ok, Data} = file:read_file(TmpFile),
-                                Unzipped = zlib:gunzip(Data),
-                                ok = file:write_file(HexFile, Unzipped),
-                                ?INFO("Writing registry to ~ts", [HexFile]),
-                                hex_to_index(State),
-                                {ok, State};
-                            _ ->
-                                ?PRV_ERROR(package_index_download)
-                        end;
-                    _ ->
-                        ?PRV_ERROR({package_parse_cdn, CDN})
-                end;
-            {uri_parse_error, CDN} ->
-                ?PRV_ERROR({package_parse_cdn, CDN})
+            {ok, _RegistryDir} ->
+                {ok, State}
         end
     catch
         _E:C ->
