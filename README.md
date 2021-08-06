@@ -45,6 +45,11 @@ Rebar3 was our attempt at improving over the legacy of Rebar 2.x, providing the
 features we felt it was missing, and to provide a better environment in which
 newcomers joining our teams could develop.
 
+## For VHT
+If you need to rebuild Rebar3 for PremCallback for a new version of erlang start with branch vht_erlang_23 
+this uses vht\relx branch vht_erlang_23, which contains some custom changes that are needed to build out premise callback solution.
+A current version of rebar3 for erlang23.3 is located at \\w2019file01\U\otp_installer\Erlang 23
+
 ## Should I use Rebar3?
 
 If your main language for your system is Erlang, that you value repeatable builds
