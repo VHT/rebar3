@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     name: Create release and publish escript for every new tag
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
 
-    - uses: gleam-lang/setup-erlang@master
+    - uses: erlef/setup-beam@v1
       with:
-        otp-version: 22.3.4.9
+          otp-version: '24'
     - name: Compile
       run: ./bootstrap
     - name: CT tests
