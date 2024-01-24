@@ -510,12 +510,14 @@ reread_logger_config() ->
             %% Extract and apply settings related to primary configuration
             %% -- primary config is used for settings shared across handlers
             LogLvlPrimary = proplists:get_value(logger_level, KernelCfg, all),
+            LogMetaPrimary = proplists:get_value(logger_metadata, KernelCfg, #{}),
             {FilterDefault, Filters} =
               case lists:keyfind(filters, 1, LogCfg) of
                   false -> {log, []};
                   {filters, FoundDef, FoundFilter} -> {FoundDef, FoundFilter}
               end,
             Primary = #{level => LogLvlPrimary,
+                        metadata => LogMetaPrimary,
                         filter_default => FilterDefault,
                         filters => Filters},
             lists:foreach(fun maybe_reset_logger_handler/1, LogCfg),
@@ -766,7 +768,12 @@ vcs_vsn(AppInfo, Vcs, State) ->
         {cmd, CmdString} ->
             cmd_vsn_invoke(CmdString, rebar_app_info:dir(AppInfo));
         unknown ->
-            ?ABORT("vcs_vsn: Unknown vsn format: ~p", [Vcs]);
+            case vsn_from_hex_metadata(AppInfo) of
+                unknown ->
+                    ?ABORT("vcs_vsn: Unknown vsn format: ~p", [Vcs]);
+                Other ->
+                    Other
+            end;
         {error, Reason} ->
             ?ABORT("vcs_vsn: ~ts", [Reason])
     end.
@@ -799,6 +806,21 @@ vcs_vsn_cmd(AppInfo, VCS, State) when is_list(VCS) ->
     end;
 vcs_vsn_cmd(_, _, _) ->
     unknown.
+
+vsn_from_hex_metadata(AppInfo) ->
+    HexMetadataPath = filename:join(
+                        rebar_app_info:dir(AppInfo),
+                        "hex_metadata.config"
+                       ),
+
+    case filelib:is_regular(HexMetadataPath) of
+        true ->
+            {ok, HexMetadata} = file:consult(HexMetadataPath),
+            binary_to_list(proplists:get_value(<<"version">>, HexMetadata));
+        _ ->
+            unknown
+    end.
+
 
 cmd_vsn_invoke(Cmd, Dir) ->
     {ok, VsnString} = rebar_utils:sh(Cmd, [{cd, Dir}, {use_stdout, false}]),
