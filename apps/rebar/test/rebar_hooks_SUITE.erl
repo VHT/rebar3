@@ -166,10 +166,17 @@ deps_clean_hook_namespace(Config) ->
             ]}
         ]}
     ],
+    %% Only detect dependencies when asked to parse them.
+    %% Avoids scanning and fetching them only to clean them.
     rebar_test_utils:run_and_check(
         Config, RebarConfig, ["clean"],
+        {ok, [{dep_not_exist, "some_dep"}]}
+    ),
+    rebar_test_utils:run_and_check(
+        Config, RebarConfig, ["clean", "-a"],
         {ok, [{dep, "some_dep"}]}
-    ).
+    ),
+    ok.
 
 %% Checks that a hook that is defined on an app (not a top level hook of a project with subapps) is run
 eunit_app_hooks(Config) ->
@@ -281,4 +288,18 @@ env_vars_in_hooks(Config) ->
     rebar_test_utils:create_config(AppDir, RebarConfig),
     rebar_test_utils:create_app(AppDir, Name, Vsn, [kernel, stdlib]),
     rebar_test_utils:run_and_check(Config, RebarConfig, ["compile"],
-                {ok, [{app, Name, valid}, {file, HookFile}]}).
+                {ok, [{app, Name, valid}, {file, HookFile}]}),
+
+    State = rebar_state:new(),
+    Env = rebar_env:create_env(State),
+    EnvVars = [Var || {Var,_Value} <- Env],
+    ShOpts = [{env, Env}],
+    [check_env(Var,ShOpts) || Var <- EnvVars].
+
+check_env(EnvName, ShOpts) ->
+    %% check that a variable has a value
+    %% dont use 'echo -n' because it's not portable
+    Resp = rebar_utils:sh("echo $"++EnvName, ShOpts),
+    ?assertMatch({ok,_}, Resp),
+    ?assertNotEqual({ok,"\n"},
+                    Resp).

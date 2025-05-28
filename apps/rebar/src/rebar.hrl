@@ -14,6 +14,7 @@
 
 -define(DEFAULT_BASE_DIR, "_build").
 -define(DEFAULT_ROOT_DIR, ".").
+-define(DEFAULT_PROJECT_SRC_DIRS, ["src"]).
 -define(DEFAULT_PROJECT_APP_DIRS, ["apps/*", "lib/*", "."]).
 -define(DEFAULT_PROJECT_PLUGIN_DIRS, ["plugins/*"]).
 -define(DEFAULT_CHECKOUTS_DIR, "_checkouts").
@@ -27,7 +28,7 @@
 -define(DEFAULT_CDN, "https://repo.hex.pm").
 -define(LOCK_FILE, "rebar.lock").
 -define(DEFAULT_COMPILER_SOURCE_FORMAT, relative).
--define(DEFAULT_COMPILER_ERROR_FORMAT, minimal). % 'rich' for multiline values
+-define(DEFAULT_COMPILER_ERROR_FORMAT, rich). % 'minimal' for default values as of 3.23.0 and earlier
 -define(PACKAGE_INDEX_VERSION, 6).
 -define(PACKAGE_TABLE, package_index).
 -define(INDEX_FILE, "packages.idx").
@@ -62,11 +63,7 @@
 -type rebar_digraph() :: digraph:graph().
 -type rebar_set() :: sets:set().
 
--ifdef(fun_stacktrace).
--define(WITH_STACKTRACE(T, R, S), T:R -> S = erlang:get_stacktrace(),).
--else.
 -define(WITH_STACKTRACE(T, R, S), T:R:S ->).
--endif.
 
 -define(GRAPH_VSN, 2).
 -type v() :: {digraph:vertex(), term()} | 'false'.

@@ -191,10 +191,11 @@ get_apps_beams([App | Rest], AllApps, Acc) ->
             Beams = get_app_beams(App, OutDir),
             get_apps_beams(Rest, AllApps, Beams ++ Acc);
         _->
-            case code:lib_dir(App, ebin) of
+            case code:lib_dir(App) of
                 {error, bad_name} ->
                     throw(?PRV_ERROR({bad_name, App}));
-                Path ->
+                AppDir ->
+                    Path = filename:join(AppDir, "ebin"),
                     Beams = get_app_beams(App, Path),
                     get_apps_beams(Rest, AllApps, Beams ++ Acc)
             end
@@ -242,8 +243,14 @@ read_file(Prefix, Filename, Dir) ->
                     _ ->
                         filename:join([Prefix, Filename])
                 end,
+    FilePath = filename:join(Dir, Filename),
+    {ok, FileInfo0} = file:read_file_info(FilePath),
+    DateTime = {{1970, 1, 1}, {0, 0, 1}},
+    FileInfo = FileInfo0#file_info{atime = DateTime,
+                                   ctime = DateTime,
+                                   mtime = DateTime},
     [dir_entries(filename:dirname(Filename1)),
-     {Filename1, file_contents(filename:join(Dir, Filename))}].
+     {Filename1, file_contents(FilePath), FileInfo}].
 
 file_contents(Filename) ->
     {ok, Bin} = file:read_file(Filename),
@@ -271,7 +278,7 @@ usort(List) ->
     lists:ukeysort(1, lists:flatten(List)).
 
 get_nonempty(Files) ->
-    [{FName,FBin} || {FName,FBin} <- Files, FBin =/= <<>>].
+    [{FName,FBin,FInfo} || {FName,FBin,FInfo} <- Files, FBin =/= <<>>].
 
 find_deps(AppNames, AllApps, State) ->
     BinAppNames = [rebar_utils:to_binary(Name) || Name <- AppNames],

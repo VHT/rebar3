@@ -182,8 +182,15 @@ run_aux(State, RawArgs) ->
     {ok, Providers} = application:get_env(rebar, providers),
     %% Providers can modify profiles stored in opts, so set default after initializing providers
     State6 = rebar_state:create_logic_providers(Providers, State5),
-    %% Initializing project_plugins which can override default providers
-    State7 = rebar_plugins:project_plugins_install(State6),
+
+    State7 = case os:getenv("REBAR_SKIP_PROJECT_PLUGINS") of
+                 false ->
+                     %% Initializing project_plugins which can override default providers
+                     rebar_plugins:project_plugins_install(State6);
+                 _ ->
+                     State6
+             end,
+
     State8 = rebar_plugins:top_level_install(State7),
 
     State9 = rebar_state:default(State8, rebar_state:opts(State8)),
@@ -312,7 +319,12 @@ log_level() ->
                 Di when Di == false; Di == "" ->
                     case os:getenv("DEBUG") of
                         D when D == false; D == "" ->
-                            rebar_log:default_level();
+                            try
+                                {ok, L} = application:get_env(rebar, log_level),
+                                 rebar_log:atom_to_level(L)
+                            catch
+                                _:_ -> rebar_log:default_level()
+                            end;
                         _ ->
                             rebar_log:debug_level()
                     end;

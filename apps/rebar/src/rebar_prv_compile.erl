@@ -290,7 +290,7 @@ build_root_extras(State, Apps) ->
                 [] ->
                     [];
                 VirtApps ->
-                    %% re-use the project-apps digraph?
+                    %% reuse the project-apps digraph?
                     run_compilers(State, [], VirtApps, project_apps)
             end
     end.
@@ -513,7 +513,7 @@ delete_if_symlink(Path) ->
     end.
 
 resolve_src_dirs(Opts) ->
-    SrcDirs = rebar_dir:src_dirs(Opts, ["src"]),
+    SrcDirs = rebar_dir:src_dirs(Opts),
     ExtraDirs = rebar_dir:extra_src_dirs(Opts, []),
     normalize_src_dirs(SrcDirs, ExtraDirs).
 
